@@ -1871,6 +1871,7 @@ class Windows11FileMerger:
             messagebox.showerror("错误", f"预览失败：{str(e)}")
 
 
+
 def main():
     """主函数"""
     root = tk.Tk()
