@@ -1,6 +1,5 @@
-
 ```markdown
-# 多文本快速复制工具
+# 多文本快速复制工具 (QuickCopy)
 
 一键复制多个文件内容，快速复制到粘贴板。(一个个复制代码给AI太累了)
 
@@ -33,6 +32,44 @@ python 多文本快速复制工具.py
 - pyperclip
 
 ## 许可证
+
+MIT
+
+---
+
+# QuickCopy - Multi-Text Copy Tool
+
+One-click copy multiple file contents to clipboard. (Tired of copying code files one by one for AI?)
+
+## Features
+
+- 📁 **Select Folder** - Load all files in the selected folder
+- ✅ **Batch Select** - Select all files in a folder at once
+- 📋 **One-Click Copy** - Copy merged content directly to clipboard
+- 🔍 **Quick Search** - Real-time file filtering
+- 📝 **Smart Filter** - One-click filter code files or text files
+- 🔄 **Order Adjustment** - Freely adjust file merge order
+
+## Installation
+
+```bash
+pip install pyperclip
+python QuickCopy.py
+```
+
+## Use Cases
+
+- Batch send code files when asking AI questions
+- Collect multiple files for code review
+- Merge text content for document organization
+
+## Dependencies
+
+- Python 3.6+
+- tkinter (built-in)
+- pyperclip
+
+## License
 
 MIT
 ```
