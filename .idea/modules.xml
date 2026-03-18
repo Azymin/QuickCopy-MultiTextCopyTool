@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/QClone.iml" filepath="$PROJECT_DIR$/.idea/QClone.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/QuickCopy.iml" filepath="$PROJECT_DIR$/.idea/QuickCopy.iml" />
     </modules>
   </component>
 </project>

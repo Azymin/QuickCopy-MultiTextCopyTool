@@ -124,8 +124,8 @@ class Windows11Theme:
                         width=14)
 
 
-class Windows11FileMerger:
-    """Windows 11 风格多文本快速复制工具 - 优化布局版"""
+class QuickCopy:
+   
 
     def __init__(self, root):
         self.root = root
@@ -1482,7 +1482,7 @@ def main():
         except:
             pass
 
-    app = Windows11FileMerger(root)
+    app = QuickCopy(root)
 
     root.update_idletasks()
     width = root.winfo_width()
