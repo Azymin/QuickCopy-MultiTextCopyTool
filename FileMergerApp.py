@@ -125,11 +125,11 @@ class Windows11Theme:
 
 
 class Windows11FileMerger:
-    """Windows 11 风格文件合并工具 - 优化布局版"""
+    """Windows 11 风格多文本快速复制工具 - 优化布局版"""
 
     def __init__(self, root):
         self.root = root
-        self.root.title("文件合并工具 - Windows 11 40px大图标版")
+        self.root.title("多文本快速复制工具")
         self.root.geometry("1600x900")  # 恢复为标准大小
 
         # 设置窗口背景
@@ -160,7 +160,7 @@ class Windows11FileMerger:
 
     def show_welcome(self):
         """显示欢迎消息"""
-        self.status_var.set("✨ 欢迎使用 Windows 11 文件合并工具 (40px大图标版)")
+        self.status_var.set("✨ 欢迎使用 多文本快速复制工具")
 
     def create_widgets(self):
         """创建Windows 11风格界面 - 优化布局"""
