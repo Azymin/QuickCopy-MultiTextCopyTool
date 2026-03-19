@@ -1,5 +1,8 @@
 ```markdown
-# 多文本快速复制工具 (QuickCopy)
+
+# QuickCopy - 多文本快速复制工具
+
+作者：**[Azymin](https://github.com/Azymin)**
 
 一键复制多个文件内容，快速复制到粘贴板。(一个个复制代码给AI太累了)
 
@@ -37,7 +40,10 @@ MIT
 
 ---
 
-# QuickCopy - Multi-Text Copy Tool
+
+# QuickCopy - MultiTextCopyTool
+
+作者：**[Azymin](https://github.com/Azymin)**
 
 One-click copy multiple file contents to clipboard. (Tired of copying code files one by one for AI?)
 
