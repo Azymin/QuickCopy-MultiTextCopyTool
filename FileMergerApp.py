@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-File Content Merger Pro Plus - Windows 11 官方风格版 (最终修复版)
-Version: 3.8.0
-Author: 为您服务的程序员
-Description: 修复trace弃用警告 + 优化勾选体验（整行点击即可勾选）
-"""
-
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import pyperclip
@@ -16,11 +9,10 @@ import threading
 from datetime import datetime
 import platform
 import ctypes
-from ctypes import wintypes
 
 
 class Windows11Icons:
-    """Windows 11 40px大图标方案"""
+    """Windows 11 图标方案"""
 
     FILE_ICONS = {
         '.py': '🐍', '.js': '🟨', '.java': '☕', '.cpp': '⚙️', '.c': '🔧',
@@ -40,7 +32,7 @@ class Windows11Icons:
     }
 
     FOLDER_ICONS = {
-        'closed': '📁', 'open': '📂', 'selected': '✅', 'partial': '◻️',
+        'closed': '📁', 'open': '📂',
         'special': {
             'Desktop': '🖥️', 'Downloads': '⬇️', 'Documents': '📚',
             'Pictures': '🖼️', 'Music': '🎵', 'Videos': '🎬', 'Git': '📦',
@@ -48,6 +40,11 @@ class Windows11Icons:
             '.git': '📋', '.vscode': '🔷', '.idea': '💡',
         }
     }
+
+    # 🔧 大尺寸checkbox符号（使用更大的Unicode字符）
+    CHECKBOX_UNCHECKED = '☐'  # 未选中
+    CHECKBOX_CHECKED = '☑'  # 已选中
+    CHECKBOX_PARTIAL = '◐'  # 部分选中
 
     @classmethod
     def get_file_icon(cls, file_path):
@@ -62,19 +59,15 @@ class Windows11Icons:
         return cls.FILE_ICONS.get(ext, cls.FILE_ICONS['default'])
 
     @classmethod
-    def get_folder_icon(cls, folder_name, is_open=False, selected_state=None):
+    def get_folder_icon(cls, folder_name, is_open=False):
         """获取文件夹图标"""
-        if selected_state == 'full':
-            return '✅'
-        elif selected_state == 'partial':
-            return '◻️'
         if folder_name in cls.FOLDER_ICONS['special']:
             return cls.FOLDER_ICONS['special'][folder_name]
         return cls.FOLDER_ICONS['open'] if is_open else cls.FOLDER_ICONS['closed']
 
 
 class Windows11Theme:
-    """Windows 11 官方配色方案"""
+    """Windows 11 官方配色方案 - 大尺寸优化"""
 
     COLORS = {
         'bg_primary': '#f3f3f3', 'bg_secondary': '#ffffff', 'bg_tertiary': '#f9f9f9',
@@ -85,16 +78,24 @@ class Windows11Theme:
     }
 
     FONTS = {
-        'default': ('Segoe UI Variable', 11), 'default_bold': ('Segoe UI Variable', 11, 'bold'),
-        'title': ('Segoe UI Variable Display', 24, 'bold'), 'subtitle': ('Segoe UI Variable Display', 16),
-        'heading': ('Segoe UI Variable', 13, 'bold'), 'body': ('Segoe UI Variable', 11),
-        'small': ('Segoe UI Variable', 10), 'code': ('Cascadia Code', 12),
-        'icon': ('Segoe UI Emoji', 20),
+        # 🔧 增大所有字体尺寸
+        'default': ('Segoe UI Variable', 13),  # 11 → 13
+        'default_bold': ('Segoe UI Variable', 13, 'bold'),  # 11 → 13
+        'title': ('Segoe UI Variable Display', 28, 'bold'),  # 24 → 28
+        'subtitle': ('Segoe UI Variable Display', 18),  # 16 → 18
+        'heading': ('Segoe UI Variable', 15, 'bold'),  # 13 → 15
+        'body': ('Segoe UI Variable', 13),  # 11 → 13
+        'small': ('Segoe UI Variable', 12),  # 10 → 12
+        'code': ('Cascadia Code', 14),  # 12 → 14
+        'icon': ('Segoe UI Emoji', 16),  # 14 → 16
+        # 🔧 新增：Treeview专用大字体
+        'tree_item': ('Segoe UI Variable', 14),  # Treeview项目字体
+        'tree_folder': ('Segoe UI Variable', 14, 'bold'),  # Treeview文件夹字体
     }
 
     @classmethod
     def apply_theme(cls):
-        """应用主题"""
+        """应用主题 - 增大行高和缩进"""
         style = ttk.Style()
         style.theme_use('clam')
 
@@ -104,8 +105,9 @@ class Windows11Theme:
                         fieldbackground=cls.COLORS['bg_secondary'],
                         borderwidth=0,
                         relief='flat',
-                        font=cls.FONTS['default'],
-                        rowheight=40)
+                        font=cls.FONTS['tree_item'],
+                        rowheight=56,  # 🔧 48 → 56 增大行高，更容易点击
+                        indent=30)  # 🔧 25 → 30 增大缩进，折叠箭头更明显
         style.map('Modern.Treeview',
                   background=[('selected', cls.COLORS['selected'])])
 
@@ -115,72 +117,53 @@ class Windows11Theme:
                         font=cls.FONTS['default_bold'],
                         borderwidth=1,
                         bordercolor=cls.COLORS['border'],
-                        height=35)
+                        height=40)  # 🔧 35 → 40
 
         style.configure('Modern.Vertical.TScrollbar',
                         background=cls.COLORS['bg_tertiary'],
                         troughcolor=cls.COLORS['bg_primary'],
                         bordercolor=cls.COLORS['border'],
-                        width=12)
+                        width=14)  # 🔧 12 → 14
 
 
 class QuickCopy:
-    """多文本快速复制工具 - 最终修复版"""
+    """多文本快速复制工具 - 大尺寸优化完美版"""
 
     def __init__(self, root):
         self.root = root
         self.root.title("多文本快速复制工具")
-        self.root.geometry("1300x800")  # 标准尺寸
-        self.root.minsize(1000, 700)    # 最小尺寸保证所有控件可见
+        self.root.geometry("1400x900")  # 🔧 1300x800 → 1400x900
+        self.root.minsize(1100, 750)  # 🔧 1000x700 → 1100x750
 
-        # 设置窗口背景
         self.root.configure(bg=Windows11Theme.COLORS['bg_primary'])
-
-        # 应用主题
         Windows11Theme.apply_theme()
 
-        # 当前根路径
         self.current_path = None
-
-        # 存储所有文件的勾选状态
         self.file_vars = {}
         self.tree_nodes = {}
         self.node_paths = {}
-
-        # 按选择顺序存储已选文件
         self.selected_files_order = []
+        self._click_processed = False
 
-        # 创建UI
         self.create_widgets()
-
-        # 绑定事件
         self.bind_events()
-
-        # 显示欢迎消息
         self.show_welcome()
 
     def show_welcome(self):
-        """显示欢迎消息"""
-        self.status_var.set("✨ 欢迎使用 多文本快速复制工具")
+        self.status_var.set("✨ 欢迎使用 多文本快速复制工具 - 大尺寸优化版")
 
     def create_widgets(self):
-        """创建Windows 11风格界面 - 最终修复版"""
-
-        # ========== 主容器 - 使用grid布局确保所有区域可控 ==========
         main_container = tk.Frame(self.root, bg=Windows11Theme.COLORS['bg_primary'])
-        main_container.pack(fill=tk.BOTH, expand=True, padx=15, pady=12)
+        main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=15)  # 🔧 增大边距
 
-        # 配置grid权重 - 关键：让内容区可以扩展，底部状态栏不扩展
-        main_container.grid_rowconfigure(0, weight=0)  # 标题区
-        main_container.grid_rowconfigure(1, weight=1)  # 内容区 - 可扩展
-        main_container.grid_rowconfigure(2, weight=0)  # 底部状态栏 - 不扩展
+        main_container.grid_rowconfigure(0, weight=0)
+        main_container.grid_rowconfigure(1, weight=1)
+        main_container.grid_rowconfigure(2, weight=0)
         main_container.grid_columnconfigure(0, weight=1)
 
-        # ========== 顶部标题区域 ==========
         header_frame = tk.Frame(main_container, bg=Windows11Theme.COLORS['bg_primary'])
-        header_frame.grid(row=0, column=0, sticky='ew', pady=(0, 12))
+        header_frame.grid(row=0, column=0, sticky='ew', pady=(0, 15))
 
-        # 左侧标题
         title_frame = tk.Frame(header_frame, bg=Windows11Theme.COLORS['bg_primary'])
         title_frame.pack(side=tk.LEFT)
 
@@ -200,9 +183,8 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['fg_secondary'],
             bg=Windows11Theme.COLORS['bg_primary']
         )
-        subtitle_label.pack(anchor=tk.W, pady=(2, 0))
+        subtitle_label.pack(anchor=tk.W, pady=(4, 0))
 
-        # 右侧统计卡片
         stats_card = tk.Frame(
             header_frame,
             bg=Windows11Theme.COLORS['bg_secondary'],
@@ -212,7 +194,7 @@ class QuickCopy:
         )
         stats_card.pack(side=tk.RIGHT)
 
-        stats_inner = tk.Frame(stats_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=12, pady=6)
+        stats_inner = tk.Frame(stats_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=16, pady=8)
         stats_inner.pack()
 
         stats_label = tk.Label(
@@ -228,59 +210,54 @@ class QuickCopy:
         stats_number = tk.Label(
             stats_inner,
             textvariable=self.stats_var,
-            font=('Segoe UI Variable Display', 20, 'bold'),
+            font=('Segoe UI Variable Display', 24, 'bold'),  # 🔧 20 → 24
             fg=Windows11Theme.COLORS['accent'],
             bg=Windows11Theme.COLORS['bg_secondary']
         )
         stats_number.pack()
 
-        # ========== 主要内容区域（两列布局）==========
         content_frame = tk.Frame(main_container, bg=Windows11Theme.COLORS['bg_primary'])
         content_frame.grid(row=1, column=0, sticky='nsew')
-        content_frame.grid_columnconfigure(0, weight=3)  # 左侧占3份
-        content_frame.grid_columnconfigure(1, weight=1)  # 右侧占1份
+        content_frame.grid_columnconfigure(0, weight=3)
+        content_frame.grid_columnconfigure(1, weight=1)
         content_frame.grid_rowconfigure(0, weight=1)
 
-        # 左侧面板
         left_container = tk.Frame(content_frame, bg=Windows11Theme.COLORS['bg_primary'])
-        left_container.grid(row=0, column=0, sticky='nsew', padx=(0, 10))
-        left_container.grid_rowconfigure(3, weight=1)  # 文件树区域可扩展
+        left_container.grid(row=0, column=0, sticky='nsew', padx=(0, 12))
+        left_container.grid_rowconfigure(3, weight=1)
         left_container.grid_columnconfigure(0, weight=1)
 
-        # 右侧面板
         right_container = tk.Frame(content_frame, bg=Windows11Theme.COLORS['bg_primary'])
         right_container.grid(row=0, column=1, sticky='nsew')
-        right_container.grid_rowconfigure(2, weight=1)  # 列表区域可扩展
+        right_container.grid_rowconfigure(2, weight=1)
         right_container.grid_columnconfigure(0, weight=1)
 
-        # 创建左右面板内容
         self.create_left_panel(left_container)
         self.create_right_panel(right_container)
 
-        # ========== 底部状态栏 ==========
         status_frame = tk.Frame(
             main_container,
             bg=Windows11Theme.COLORS['bg_secondary'],
             highlightbackground=Windows11Theme.COLORS['border'],
             highlightthickness=1,
             bd=0,
-            height=32
+            height=36  # 🔧 32 → 36
         )
-        status_frame.grid(row=2, column=0, sticky='ew', pady=(10, 0))
+        status_frame.grid(row=2, column=0, sticky='ew', pady=(12, 0))
         status_frame.pack_propagate(False)
 
-        status_inner = tk.Frame(status_frame, bg=Windows11Theme.COLORS['bg_secondary'], padx=10, pady=5)
+        status_inner = tk.Frame(status_frame, bg=Windows11Theme.COLORS['bg_secondary'], padx=12, pady=6)
         status_inner.pack(fill=tk.BOTH, expand=True)
 
         self.status_var = tk.StringVar(value="就绪")
         status_icon = tk.Label(
             status_inner,
             text="●",
-            font=('Segoe UI', 9),
+            font=('Segoe UI', 10),  # 🔧 9 → 10
             fg=Windows11Theme.COLORS['success'],
             bg=Windows11Theme.COLORS['bg_secondary']
         )
-        status_icon.pack(side=tk.LEFT, padx=(0, 5))
+        status_icon.pack(side=tk.LEFT, padx=(0, 6))
 
         status_label = tk.Label(
             status_inner,
@@ -294,21 +271,19 @@ class QuickCopy:
         self.progress_bar = ttk.Progressbar(
             status_inner,
             mode='indeterminate',
-            length=120
+            length=140
         )
         self.progress_bar.pack(side=tk.RIGHT)
         self.progress_bar.pack_forget()
 
     def create_left_panel(self, parent):
-        """创建左侧面板 - 使用grid确保底部控件可见"""
-        # 配置grid权重
-        parent.grid_rowconfigure(0, weight=0)  # 路径选择卡片
-        parent.grid_rowconfigure(1, weight=0)  # 工具栏卡片
-        parent.grid_rowconfigure(2, weight=1)  # 文件树卡片 - 可扩展
-        parent.grid_rowconfigure(3, weight=0)  # 底部操作栏 - 固定
+        parent.grid_rowconfigure(0, weight=0)
+        parent.grid_rowconfigure(1, weight=0)
+        parent.grid_rowconfigure(2, weight=1)
+        parent.grid_rowconfigure(3, weight=0)
         parent.grid_columnconfigure(0, weight=1)
 
-        # ========== 路径选择卡片 ==========
+        # 路径选择卡片
         path_card = tk.Frame(
             parent,
             bg=Windows11Theme.COLORS['bg_secondary'],
@@ -316,9 +291,9 @@ class QuickCopy:
             highlightthickness=1,
             bd=0
         )
-        path_card.grid(row=0, column=0, sticky='ew', pady=(0, 8))
+        path_card.grid(row=0, column=0, sticky='ew', pady=(0, 10))
 
-        path_content = tk.Frame(path_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=12, pady=10)
+        path_content = tk.Frame(path_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=14, pady=12)
         path_content.pack(fill=tk.X)
 
         path_title = tk.Label(
@@ -328,7 +303,7 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['fg_primary'],
             bg=Windows11Theme.COLORS['bg_secondary']
         )
-        path_title.pack(anchor=tk.W, pady=(0, 6))
+        path_title.pack(anchor=tk.W, pady=(0, 8))
 
         path_row = tk.Frame(path_content, bg=Windows11Theme.COLORS['bg_secondary'])
         path_row.pack(fill=tk.X)
@@ -343,7 +318,7 @@ class QuickCopy:
             relief='solid',
             bd=1
         )
-        self.path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8), ipady=4)
+        self.path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10), ipady=6)  # 🔧 增大内边距
 
         self.browse_btn = tk.Button(
             path_row,
@@ -354,11 +329,11 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['fg_primary'],
             relief='solid',
             bd=1,
-            padx=12,
-            pady=3,
+            padx=16,  # 🔧 12 → 16
+            pady=5,  # 🔧 3 → 5
             cursor='hand2'
         )
-        self.browse_btn.pack(side=tk.LEFT, padx=(0, 5))
+        self.browse_btn.pack(side=tk.LEFT, padx=(0, 6))
 
         self.load_btn = tk.Button(
             path_row,
@@ -369,13 +344,13 @@ class QuickCopy:
             fg='white',
             relief='flat',
             bd=0,
-            padx=16,
-            pady=3,
+            padx=20,  # 🔧 16 → 20
+            pady=5,  # 🔧 3 → 5
             cursor='hand2'
         )
         self.load_btn.pack(side=tk.LEFT)
 
-        # ========== 工具栏卡片 ==========
+        # 工具栏卡片
         toolbar_card = tk.Frame(
             parent,
             bg=Windows11Theme.COLORS['bg_secondary'],
@@ -383,14 +358,13 @@ class QuickCopy:
             highlightthickness=1,
             bd=0
         )
-        toolbar_card.grid(row=1, column=0, sticky='ew', pady=(0, 8))
+        toolbar_card.grid(row=1, column=0, sticky='ew', pady=(0, 10))
 
-        toolbar_content = tk.Frame(toolbar_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=12, pady=8)
+        toolbar_content = tk.Frame(toolbar_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=14, pady=10)
         toolbar_content.pack(fill=tk.X)
 
-        # 工具按钮行
         tools_row = tk.Frame(toolbar_content, bg=Windows11Theme.COLORS['bg_secondary'])
-        tools_row.pack(fill=tk.X, pady=(0, 6))
+        tools_row.pack(fill=tk.X, pady=(0, 8))
 
         tools = [
             ("✅ 全选", self.select_all),
@@ -410,11 +384,11 @@ class QuickCopy:
                 fg=Windows11Theme.COLORS['fg_primary'],
                 relief='solid',
                 bd=1,
-                padx=8,
-                pady=2,
+                padx=10,  # 🔧 8 → 10
+                pady=3,  # 🔧 2 → 3
                 cursor='hand2'
             )
-            btn.pack(side=tk.LEFT, padx=(0, 5))
+            btn.pack(side=tk.LEFT, padx=(0, 6))
 
         # 搜索行
         search_row = tk.Frame(toolbar_content, bg=Windows11Theme.COLORS['bg_secondary'])
@@ -427,10 +401,9 @@ class QuickCopy:
             bg=Windows11Theme.COLORS['bg_secondary'],
             fg=Windows11Theme.COLORS['fg_tertiary']
         )
-        search_icon.pack(side=tk.LEFT, padx=(0, 8))
+        search_icon.pack(side=tk.LEFT, padx=(0, 10))
 
         self.search_var = tk.StringVar()
-        # 【修复1】使用新的 trace_add 方法替代弃用的 trace
         self.search_var.trace_add('write', self.filter_tree)
         self.search_entry = tk.Entry(
             search_row,
@@ -441,9 +414,9 @@ class QuickCopy:
             relief='solid',
             bd=1
         )
-        self.search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=4)
+        self.search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=6)
 
-        # ========== 文件树卡片 ==========
+        # 文件树卡片
         tree_card = tk.Frame(
             parent,
             bg=Windows11Theme.COLORS['bg_secondary'],
@@ -451,25 +424,23 @@ class QuickCopy:
             highlightthickness=1,
             bd=0
         )
-        tree_card.grid(row=2, column=0, sticky='nsew', pady=(0, 8))
+        tree_card.grid(row=2, column=0, sticky='nsew', pady=(0, 10))
 
-        tree_card_inner = tk.Frame(tree_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=12, pady=10)
+        tree_card_inner = tk.Frame(tree_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=14, pady=12)
         tree_card_inner.pack(fill=tk.BOTH, expand=True)
 
         tree_title = tk.Label(
             tree_card_inner,
-            text="📋 文件浏览器 (点击任意位置即可勾选)",
+            text="📋 文件浏览器 (点击 ☐/☑ 勾选 | 双击文件夹 展开/折叠 | 单击 ▶ 展开/折叠)",
             font=Windows11Theme.FONTS['heading'],
             fg=Windows11Theme.COLORS['fg_primary'],
             bg=Windows11Theme.COLORS['bg_secondary']
         )
-        tree_title.pack(anchor=tk.W, pady=(0, 8))
+        tree_title.pack(anchor=tk.W, pady=(0, 10))
 
-        # Treeview容器
         tree_container = tk.Frame(tree_card_inner, bg='white', relief='solid', bd=1)
         tree_container.pack(fill=tk.BOTH, expand=True)
 
-        # 只保留文件名列
         self.tree = ttk.Treeview(
             tree_container,
             columns=(),
@@ -478,10 +449,10 @@ class QuickCopy:
             style='Modern.Treeview'
         )
 
-        self.tree.tag_configure('folder', font=('Segoe UI Variable', 11, 'bold'))
-        self.tree.tag_configure('file', font=('Segoe UI Variable', 11))
+        # 🔧 使用更大的字体标签
+        self.tree.tag_configure('folder', font=Windows11Theme.FONTS['tree_folder'])
+        self.tree.tag_configure('file', font=Windows11Theme.FONTS['tree_item'])
 
-        # 只保留垂直滚动条
         v_scrollbar = ttk.Scrollbar(
             tree_container,
             orient=tk.VERTICAL,
@@ -493,12 +464,14 @@ class QuickCopy:
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # 【修复2】改进勾选体验 - 整行点击即可勾选，不再需要精确点击图标
+        # 事件绑定
         self.tree.bind('<Button-1>', self.on_tree_click)
         self.tree.bind('<Double-Button-1>', self.on_tree_double_click)
         self.tree.bind('<space>', self.on_tree_space)
+        self.tree.bind('<Control-Button-1>', self.on_tree_ctrl_click)
+        self.tree.bind('<Shift-Button-1>', self.on_tree_shift_click)
 
-        # ========== 底部操作栏 ==========
+        # 底部操作栏
         action_card = tk.Frame(
             parent,
             bg=Windows11Theme.COLORS['bg_secondary'],
@@ -508,14 +481,12 @@ class QuickCopy:
         )
         action_card.grid(row=3, column=0, sticky='ew')
 
-        action_content = tk.Frame(action_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=12, pady=8)
+        action_content = tk.Frame(action_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=14, pady=10)
         action_content.pack(fill=tk.X)
 
-        # 第一行：设置选项
         settings_row = tk.Frame(action_content, bg=Windows11Theme.COLORS['bg_secondary'])
-        settings_row.pack(fill=tk.X, pady=(0, 6))
+        settings_row.pack(fill=tk.X, pady=(0, 8))
 
-        # 分隔行设置
         sep_label = tk.Label(
             settings_row,
             text="📏 分隔行数:",
@@ -523,23 +494,22 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['fg_secondary'],
             bg=Windows11Theme.COLORS['bg_secondary']
         )
-        sep_label.pack(side=tk.LEFT, padx=(0, 5))
+        sep_label.pack(side=tk.LEFT, padx=(0, 6))
 
         self.separator_var = tk.StringVar(value="3")
         self.separator_spinbox = tk.Spinbox(
             settings_row,
             from_=0,
             to=10,
-            width=4,
+            width=5,  # 🔧 4 → 5
             textvariable=self.separator_var,
             font=Windows11Theme.FONTS['body'],
             bg='white',
             relief='solid',
             bd=1
         )
-        self.separator_spinbox.pack(side=tk.LEFT, padx=(0, 15))
+        self.separator_spinbox.pack(side=tk.LEFT, padx=(0, 20))
 
-        # 显示文件名选项
         self.show_filename_var = tk.BooleanVar(value=True)
         self.show_filename_check = tk.Checkbutton(
             settings_row,
@@ -553,9 +523,8 @@ class QuickCopy:
             relief='flat',
             bd=0
         )
-        self.show_filename_check.pack(side=tk.LEFT, padx=(0, 15))
+        self.show_filename_check.pack(side=tk.LEFT, padx=(0, 20))
 
-        # 包含子目录选项
         self.include_subdirs_var = tk.BooleanVar(value=True)
         self.include_subdirs_check = tk.Checkbutton(
             settings_row,
@@ -572,7 +541,6 @@ class QuickCopy:
         )
         self.include_subdirs_check.pack(side=tk.LEFT)
 
-        # 第二行：主要操作按钮
         buttons_row = tk.Frame(action_content, bg=Windows11Theme.COLORS['bg_secondary'])
         buttons_row.pack(fill=tk.X)
 
@@ -585,11 +553,11 @@ class QuickCopy:
             fg='white',
             relief='flat',
             bd=0,
-            padx=16,
-            pady=5,
+            padx=20,  # 🔧 16 → 20
+            pady=7,  # 🔧 5 → 7
             cursor='hand2'
         )
-        self.copy_btn.pack(side=tk.LEFT, padx=(0, 8))
+        self.copy_btn.pack(side=tk.LEFT, padx=(0, 10))
 
         self.preview_btn = tk.Button(
             buttons_row,
@@ -600,11 +568,11 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['fg_primary'],
             relief='solid',
             bd=1,
-            padx=16,
-            pady=4,
+            padx=20,
+            pady=6,
             cursor='hand2'
         )
-        self.preview_btn.pack(side=tk.LEFT, padx=(0, 8))
+        self.preview_btn.pack(side=tk.LEFT, padx=(0, 10))
 
         self.expand_all_btn = tk.Button(
             buttons_row,
@@ -615,11 +583,11 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['fg_secondary'],
             relief='solid',
             bd=1,
-            padx=10,
-            pady=4,
+            padx=12,
+            pady=6,
             cursor='hand2'
         )
-        self.expand_all_btn.pack(side=tk.LEFT, padx=(0, 5))
+        self.expand_all_btn.pack(side=tk.LEFT, padx=(0, 6))
 
         self.collapse_all_btn = tk.Button(
             buttons_row,
@@ -630,19 +598,17 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['fg_secondary'],
             relief='solid',
             bd=1,
-            padx=10,
-            pady=4,
+            padx=12,
+            pady=6,
             cursor='hand2'
         )
         self.collapse_all_btn.pack(side=tk.LEFT)
 
     def create_right_panel(self, parent):
-        """创建右侧面板 - 使用grid确保所有控件可见"""
-        # 配置grid权重
-        parent.grid_rowconfigure(0, weight=0)  # 标题行
-        parent.grid_rowconfigure(1, weight=0)  # 顺序控制栏
-        parent.grid_rowconfigure(2, weight=1)  # 列表区域 - 可扩展
-        parent.grid_rowconfigure(3, weight=0)  # 底部工具栏 - 固定
+        parent.grid_rowconfigure(0, weight=0)
+        parent.grid_rowconfigure(1, weight=0)
+        parent.grid_rowconfigure(2, weight=1)
+        parent.grid_rowconfigure(3, weight=0)
         parent.grid_columnconfigure(0, weight=1)
 
         selected_card = tk.Frame(
@@ -654,12 +620,11 @@ class QuickCopy:
         )
         selected_card.grid(row=0, column=0, sticky='nsew', rowspan=4)
 
-        selected_content = tk.Frame(selected_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=12, pady=10)
+        selected_content = tk.Frame(selected_card, bg=Windows11Theme.COLORS['bg_secondary'], padx=14, pady=12)
         selected_content.pack(fill=tk.BOTH, expand=True)
 
-        # 标题行
         title_row = tk.Frame(selected_content, bg=Windows11Theme.COLORS['bg_secondary'])
-        title_row.pack(fill=tk.X, pady=(0, 8))
+        title_row.pack(fill=tk.X, pady=(0, 10))
 
         title_label = tk.Label(
             title_row,
@@ -679,15 +644,14 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['error'],
             relief='solid',
             bd=1,
-            padx=8,
-            pady=2,
+            padx=10,
+            pady=3,
             cursor='hand2'
         )
         self.clear_all_btn.pack(side=tk.RIGHT)
 
-        # 顺序控制栏
         order_frame = tk.Frame(selected_content, bg=Windows11Theme.COLORS['bg_secondary'])
-        order_frame.pack(fill=tk.X, pady=(0, 8))
+        order_frame.pack(fill=tk.X, pady=(0, 10))
 
         order_label = tk.Label(
             order_frame,
@@ -696,7 +660,7 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['fg_secondary'],
             bg=Windows11Theme.COLORS['bg_secondary']
         )
-        order_label.pack(side=tk.LEFT, padx=(0, 8))
+        order_label.pack(side=tk.LEFT, padx=(0, 10))
 
         order_buttons = [
             ("▲ 上移", self.move_selected_up),
@@ -716,17 +680,16 @@ class QuickCopy:
                 fg=Windows11Theme.COLORS['accent'],
                 relief='solid',
                 bd=1,
-                padx=8,
-                pady=2,
+                padx=10,
+                pady=3,
                 cursor='hand2',
                 state='disabled'
             )
-            btn.pack(side=tk.LEFT, padx=(0, 5))
+            btn.pack(side=tk.LEFT, padx=(0, 6))
             self.order_btns.append(btn)
 
-        # 列表容器
         list_container = tk.Frame(selected_content, bg='white', relief='solid', bd=1)
-        list_container.pack(fill=tk.BOTH, expand=True, pady=(0, 8))
+        list_container.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
 
         self.selected_listbox = tk.Listbox(
             list_container,
@@ -737,7 +700,8 @@ class QuickCopy:
             relief='flat',
             bd=0,
             highlightthickness=0,
-            selectbackground=Windows11Theme.COLORS['selected']
+            selectbackground=Windows11Theme.COLORS['selected'],
+            height=10  # 🔧 设置初始可见行数
         )
 
         scrollbar = ttk.Scrollbar(
@@ -751,7 +715,6 @@ class QuickCopy:
         self.selected_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # 底部工具栏
         list_bottom = tk.Frame(selected_content, bg=Windows11Theme.COLORS['bg_secondary'])
         list_bottom.pack(fill=tk.X)
 
@@ -776,11 +739,11 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['error'],
             relief='solid',
             bd=1,
-            padx=8,
-            pady=2,
+            padx=10,
+            pady=3,
             cursor='hand2'
         )
-        self.remove_selected_btn.pack(side=tk.LEFT, padx=(0, 5))
+        self.remove_selected_btn.pack(side=tk.LEFT, padx=(0, 6))
 
         self.copy_list_btn = tk.Button(
             btn_frame,
@@ -791,18 +754,16 @@ class QuickCopy:
             fg=Windows11Theme.COLORS['accent'],
             relief='solid',
             bd=1,
-            padx=8,
-            pady=2,
+            padx=10,
+            pady=3,
             cursor='hand2'
         )
         self.copy_list_btn.pack(side=tk.LEFT)
 
-        # 绑定列表事件
         self.selected_listbox.bind('<<ListboxSelect>>', self.on_list_select)
         self.selected_listbox.bind('<Double-Button-1>', self.on_list_double_click)
         self.selected_listbox.bind('<Delete>', self.on_list_delete)
 
-    # ========== 以下是功能方法 ==========
     def bind_events(self):
         self.path_entry.bind('<Return>', lambda e: self.load_folder_tree())
 
@@ -828,8 +789,9 @@ class QuickCopy:
 
     def _load_tree_data(self, folder):
         try:
-            icon = Windows11Icons.get_folder_icon(os.path.basename(folder))
-            root_text = f"{icon}  {os.path.basename(folder)}"
+            folder_icon = Windows11Icons.get_folder_icon(os.path.basename(folder))
+            # 🔧 使用统一的大尺寸格式：checkbox + 两个空格 + 图标 + 两个空格 + 名称
+            root_text = f"☐    {folder_icon}    {os.path.basename(folder)}"  # 🔧 增加间距
             root_node = self.tree.insert('', 'end', text=root_text, open=True, tags=('folder',))
             self.tree_nodes[root_node] = folder
             self.node_paths[folder] = root_node
@@ -854,10 +816,11 @@ class QuickCopy:
                     continue
                 full_path = os.path.join(path, item)
                 if os.path.isdir(full_path):
-                    icon = Windows11Icons.get_folder_icon(item, is_open=False)
+                    folder_icon = Windows11Icons.get_folder_icon(item, is_open=False)
+                    # 🔧 文件夹：增加间距让checkbox更容易点击
                     folder_node = self.tree.insert(
                         parent_node, 'end',
-                        text=f"{icon}  {item}",
+                        text=f"☐    {folder_icon}    {item}",
                         tags=('folder',)
                     )
                     self.tree_nodes[folder_node] = full_path
@@ -866,9 +829,10 @@ class QuickCopy:
                         self._add_tree_items(folder_node, full_path)
                 else:
                     icon = Windows11Icons.get_file_icon(full_path)
+                    # 🔧 文件：增加间距让checkbox更容易点击
                     file_node = self.tree.insert(
                         parent_node, 'end',
-                        text=f"{icon}  {item}",
+                        text=f"☐    {icon}    {item}",
                         tags=('file',)
                     )
                     self.tree_nodes[file_node] = full_path
@@ -877,68 +841,134 @@ class QuickCopy:
         except PermissionError:
             pass
 
-    # 【修复2核心】改进点击勾选体验 - 整行点击直接勾选，无需精确点击图标
+    def get_indent_level(self, item):
+        """获取节点的缩进级别"""
+        level = 0
+        parent = self.tree.parent(item)
+        while parent:
+            level += 1
+            parent = self.tree.parent(parent)
+        return level
+
+    def is_click_on_toggle(self, event, item):
+        """判断是否点击在展开/折叠箭头上 - 增大检测区域"""
+        bbox = self.tree.bbox(item, column='#0')
+        if not bbox:
+            return False
+
+        level = self.get_indent_level(item)
+        # 🔧 展开箭头检测区域增大：缩进后的前28px（30-2=28）
+        indent_width = level * 30  # 与style中的indent=30对应
+        toggle_region_start = indent_width
+        toggle_region_end = indent_width + 28  # 🔧 20 → 28 增大箭头点击区域
+
+        click_x = event.x - bbox[0]
+
+        tags = self.tree.item(item, 'tags')
+        if 'folder' not in (tags or ()):
+            return False
+
+        return toggle_region_start <= click_x <= toggle_region_end
+
     def on_tree_click(self, event):
-        """点击文件树时直接勾选/取消勾选文件或文件夹"""
+        """单击事件：勾选/取消勾选（除展开箭头外）"""
         item = self.tree.identify_row(event.y)
-        if item:
-            # 直接勾选/取消勾选，不再判断点击区域
+        if not item:
+            return
+
+        if hasattr(self, '_click_processed') and self._click_processed:
+            self._click_processed = False
+            return
+
+        # 如果点击展开箭头 → 展开/折叠
+        if self.is_click_on_toggle(event, item):
+            self.toggle_expand(item)
+            return "break"
+        else:
+            # 点击其他区域 → 勾选/取消勾选
             self.toggle_item_selection(item)
             return "break"
-        return None
 
     def on_tree_double_click(self, event):
-        """双击展开/折叠文件夹"""
+        """双击事件：展开/折叠文件夹"""
         item = self.tree.identify_row(event.y)
-        if item:
-            tags = self.tree.item(item, 'tags')
-            if 'folder' in tags:
-                if self.tree.item(item, 'open'):
-                    self.tree.item(item, open=False)
-                else:
-                    self.tree.item(item, open=True)
-                self.update_folder_icon(item)
+        if not item:
+            return
+
+        self._click_processed = True
+
+        tags = self.tree.item(item, 'tags')
+        if 'folder' in (tags or ()):
+            self.toggle_expand(item)
+            return "break"
+        elif 'file' in (tags or ()):
+            self.toggle_item_selection(item)
             return "break"
 
+    def on_tree_ctrl_click(self, event):
+        """Ctrl+单击"""
+        item = self.tree.identify_row(event.y)
+        if item:
+            self.toggle_item_selection(item)
+            return "break"
+
+    def on_tree_shift_click(self, event):
+        """Shift+单击"""
+        item = self.tree.identify_row(event.y)
+        if item:
+            self.toggle_item_selection(item)
+            return "break"
+
+    def toggle_expand(self, item):
+        """展开/折叠文件夹"""
+        tags = self.tree.item(item, 'tags')
+        if 'folder' not in (tags or ()):
+            return
+
+        if self.tree.item(item, 'open'):
+            self.tree.item(item, open=False)
+        else:
+            self.tree.item(item, open=True)
+
+        self.update_folder_icon(item)
+        self.status_var.set(f"{'折叠' if not self.tree.item(item, 'open') else '展开'}文件夹")
+
     def on_tree_space(self, event):
-        """空格键勾选"""
+        """空格键：勾选/取消勾选"""
         item = self.tree.focus()
         if item:
             self.toggle_item_selection(item)
             return "break"
-
-    def toggle_folder(self, item):
-        """展开/折叠文件夹（保留用于其他调用）"""
-        tags = self.tree.item(item, 'tags')
-        if 'folder' in tags:
-            if self.tree.item(item, 'open'):
-                self.tree.item(item, open=False)
-            else:
-                self.tree.item(item, open=True)
-            self.update_folder_icon(item)
 
     def toggle_item_selection(self, item):
         """勾选/取消勾选项目"""
         path = self.tree_nodes.get(item)
         if not path:
             return
+
         tags = self.tree.item(item, 'tags')
-        if 'folder' in tags:
+
+        if 'folder' in (tags or ()):
             self.toggle_folder_selection(path, item)
-        else:
+        elif 'file' in (tags or ()):
             if path in self.file_vars:
                 current = self.file_vars[path].get()
                 new_state = not current
                 self.file_vars[path].set(new_state)
+
                 if new_state:
                     if path not in self.selected_files_order:
                         self.selected_files_order.append(path)
                 else:
                     if path in self.selected_files_order:
                         self.selected_files_order.remove(path)
-                self.update_file_icon(item, new_state)
+
+                self.update_item_icon(item, new_state)
                 self.update_parent_folders(item)
                 self.update_selected_list()
+
+                self.status_var.set(f"{'☑ 已勾选' if new_state else '☐ 已取消'} {os.path.basename(path)}")
+
         self.update_file_count()
 
     def toggle_folder_selection(self, folder_path, folder_node):
@@ -947,16 +977,21 @@ class QuickCopy:
         for file_path in self.file_vars:
             if file_path.startswith(folder_path) and os.path.isfile(file_path):
                 files_in_folder.append(file_path)
+
         if not files_in_folder:
             return
+
         selected_count = sum(1 for f in files_in_folder if self.file_vars[f].get())
         new_state = selected_count < len(files_in_folder)
+
         for file_path in files_in_folder:
             self.file_vars[file_path].set(new_state)
+
         for file_path in files_in_folder:
             node = self.node_paths.get(file_path)
             if node:
-                self.update_file_icon(node, new_state)
+                self.update_item_icon(node, new_state)
+
         if new_state:
             for file_path in files_in_folder:
                 if file_path not in self.selected_files_order:
@@ -965,48 +1000,70 @@ class QuickCopy:
             for file_path in files_in_folder:
                 if file_path in self.selected_files_order:
                     self.selected_files_order.remove(file_path)
+
         self.update_folder_icon(folder_node)
         self.update_selected_list()
 
-    def update_file_icon(self, node, selected):
+        self.status_var.set(f"{'☑ 已勾选' if new_state else '☐ 已取消'} 文件夹 {os.path.basename(folder_path)}")
+
+    def update_item_icon(self, node, selected):
+        """统一更新项目图标 - 大间距版本"""
         path = self.tree_nodes.get(node)
-        if path and os.path.isfile(path):
-            if selected:
-                self.tree.item(node, text=f"✅  {os.path.basename(path)}")
-            else:
-                icon = Windows11Icons.get_file_icon(path)
-                self.tree.item(node, text=f"{icon}  {os.path.basename(path)}")
+        if not path:
+            return
+
+        if os.path.isfile(path):
+            icon = Windows11Icons.get_file_icon(path)
+        else:
+            icon = Windows11Icons.get_folder_icon(os.path.basename(path), self.tree.item(node, 'open'))
+
+        checkbox = Windows11Icons.CHECKBOX_CHECKED if selected else Windows11Icons.CHECKBOX_UNCHECKED
+        # 🔧 使用4个空格增加间距，让checkbox区域更大更容易点击
+        self.tree.item(node, text=f"{checkbox}    {icon}    {os.path.basename(path)}")
+
+    def update_file_icon(self, node, selected):
+        """更新文件图标（保持向后兼容）"""
+        self.update_item_icon(node, selected)
 
     def update_folder_icon(self, folder_node):
+        """更新文件夹图标，包含部分选择状态 - 大间距版本"""
         folder_path = self.tree_nodes.get(folder_node)
         if not folder_path or not os.path.isdir(folder_path):
             return
+
         folder_name = os.path.basename(folder_path)
         is_open = self.tree.item(folder_node, 'open')
+        folder_icon = Windows11Icons.get_folder_icon(folder_name, is_open)
+
+        # 计算勾选状态
         files_in_folder = []
         for file_path, var in self.file_vars.items():
             if file_path.startswith(folder_path) and os.path.isfile(file_path):
                 files_in_folder.append(var.get())
+
         if not files_in_folder:
-            selected_state = None
+            checkbox = Windows11Icons.CHECKBOX_UNCHECKED
         else:
             selected_count = sum(files_in_folder)
             if selected_count == 0:
-                selected_state = None
+                checkbox = Windows11Icons.CHECKBOX_UNCHECKED
             elif selected_count == len(files_in_folder):
-                selected_state = 'full'
+                checkbox = Windows11Icons.CHECKBOX_CHECKED
             else:
-                selected_state = 'partial'
-        icon = Windows11Icons.get_folder_icon(folder_name, is_open, selected_state)
-        self.tree.item(folder_node, text=f"{icon}  {folder_name}")
+                checkbox = Windows11Icons.CHECKBOX_PARTIAL
+
+        # 🔧 使用4个空格增加间距
+        self.tree.item(folder_node, text=f"{checkbox}    {folder_icon}    {folder_name}")
 
     def update_parent_folders(self, item):
+        """更新父文件夹图标"""
         parent = self.tree.parent(item)
         while parent:
             self.update_folder_icon(parent)
             parent = self.tree.parent(parent)
 
     def update_selected_list(self):
+        """更新右侧已选列表"""
         self.selected_listbox.delete(0, tk.END)
         for index, file_path in enumerate(self.selected_files_order, 1):
             if os.path.isfile(file_path):
@@ -1017,6 +1074,7 @@ class QuickCopy:
                 icon = Windows11Icons.get_file_icon(file_path)
                 display_text = f"{index:3d}. {icon}  {rel_path}"
                 self.selected_listbox.insert(tk.END, display_text)
+
         count = len(self.selected_files_order)
         self.selected_count_label.config(text=f"{count} 个文件")
         self.stats_var.set(str(count))
@@ -1396,11 +1454,11 @@ class QuickCopy:
             merged_content = self.merge_selected_files()
             preview_window = tk.Toplevel(self.root)
             preview_window.title("内容预览")
-            preview_window.geometry("1000x700")
-            preview_window.minsize(800, 500)
+            preview_window.geometry("1100x750")  # 🔧 1000x700 → 1100x750
+            preview_window.minsize(850, 550)  # 🔧 800x500 → 850x550
             preview_window.configure(bg=Windows11Theme.COLORS['bg_primary'])
             main_frame = tk.Frame(preview_window, bg=Windows11Theme.COLORS['bg_primary'])
-            main_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=12)
+            main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=15)
             title_label = tk.Label(
                 main_frame,
                 text="📄 内容预览",
@@ -1408,7 +1466,7 @@ class QuickCopy:
                 fg=Windows11Theme.COLORS['fg_primary'],
                 bg=Windows11Theme.COLORS['bg_primary']
             )
-            title_label.pack(anchor=tk.W, pady=(0, 12))
+            title_label.pack(anchor=tk.W, pady=(0, 15))
             text_container = tk.Frame(main_frame, bg='white', relief='solid', bd=1)
             text_container.pack(fill=tk.BOTH, expand=True)
             text_widget = tk.Text(
@@ -1419,8 +1477,8 @@ class QuickCopy:
                 fg=Windows11Theme.COLORS['fg_primary'],
                 relief='flat',
                 bd=0,
-                padx=12,
-                pady=12
+                padx=16,
+                pady=16
             )
             scrollbar = ttk.Scrollbar(
                 text_container,
@@ -1434,7 +1492,7 @@ class QuickCopy:
             text_widget.insert('1.0', merged_content)
             text_widget.config(state=tk.DISABLED)
             bottom_frame = tk.Frame(main_frame, bg=Windows11Theme.COLORS['bg_primary'])
-            bottom_frame.pack(fill=tk.X, pady=(10, 0))
+            bottom_frame.pack(fill=tk.X, pady=(12, 0))
             count_label = tk.Label(
                 bottom_frame,
                 text=f"📊 共 {len(selected_files)} 个文件",
@@ -1452,8 +1510,8 @@ class QuickCopy:
                 fg='white',
                 relief='flat',
                 bd=0,
-                padx=20,
-                pady=5,
+                padx=24,
+                pady=7,
                 cursor='hand2'
             )
             close_btn.pack(side=tk.RIGHT)
@@ -1462,7 +1520,6 @@ class QuickCopy:
 
 
 def main():
-    """主函数"""
     root = tk.Tk()
 
     if platform.system() == 'Windows':
